@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>同盟メンバー 名前チェッカー</title>
+<style>
+  :root {
+    --bg: #0f1720;
+    --panel: #17212b;
+    --border: #2a3742;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #4fa3e3;
+    --danger: #e35d5d;
+    --warn: #d9a441;
+    --ok: #59c37a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    line-height: 1.6;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    font-size: 13px;
+  }
+  .box a { color: var(--accent); }
+  .box ol { margin: 8px 0 0; padding-left: 20px; }
+  .box li { margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  tr.changed { background: rgba(217, 164, 65, 0.12); }
+  tr.error { background: rgba(227, 93, 93, 0.10); }
+  .status-ok { color: var(--ok); }
+  .status-err { color: var(--danger); }
+  .status-changed { color: var(--warn); font-weight: 600; }
+  .name-cell { font-weight: 600; }
+  .diff { font-size: 12px; color: var(--warn); display: block; font-weight: normal; }
+  .lastrun { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  button {
+    background: var(--accent);
+    color: #06131e;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>同盟メンバー 名前チェッカー</h1>
+<div class="sub">プレイヤーIDから現在のゲーム内ニックネームを確認し、名前が変わったメンバーを一覧で把握するツールです。</div>
+
+<div class="box">
+  実際の名前の取得は、GitHub Actionsが1日1回自動で行い、その結果(<code>data.json</code>)をこのページが表示しています(このページ自体は直接ゲームのAPIを呼び出していません&mdash;ブラウザからだとCORSでブロックされるため)。
+  <ol>
+    <li><b>メンバーを追加/変更したいとき</b>: このリポジトリの <code>members.json</code> をGitHub上で直接編集してください(プレイヤーIDと備考を追加するだけです)。</li>
+    <li><b>今すぐ最新の名前を確認したいとき</b>: リポジトリの「Actions」タブ→「Update Member Names」→「Run workflow」ボタンで手動実行できます(数十秒〜数分で完了します)。</li>
+    <li>実行が終わったら、このページを再読み込み(下のボタンでも可)すると最新の結果が表示されます。</li>
+  </ol>
+  使用しているAPIは非公式のもの(<a href="https://github.com/justncodes/wos-giftcode" target="_blank">justncodes/wos-giftcode</a> の実装を参考にしたもの)です。運営会社の仕様変更で動かなくなる可能性がある点はご了承ください。
+</div>
+
+<button onclick="load()">最新のデータを再読み込み</button>
+<div class="lastrun" id="lastrun"></div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:130px;">プレイヤーID</th>
+      <th style="width:180px;">現在の名前</th>
+      <th style="width:80px;">Kingdom</th>
+      <th style="width:200px;">備考</th>
+      <th style="width:150px;">最終確認</th>
+      <th style="width:150px;">状態</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"><tr><td colspan="6">読み込み中...</td></tr></tbody>
+</table>
+
+<script>
+async function load() {
+  const tbody = document.getElementById("tbody");
+  const lastrun = document.getElementById("lastrun");
+  tbody.innerHTML = '<tr><td colspan="6">読み込み中...</td></tr>';
+  try {
+    const res = await fetch("./data.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("data.json が見つかりません(まだ一度もActionsが実行されていない可能性があります)");
+    const data = await res.json();
+    lastrun.textContent = "最終更新: " + (data.lastRun || "不明");
+    tbody.innerHTML = "";
+    (data.members || []).forEach(m => {
+      const tr = document.createElement("tr");
+      if (m.status === "changed") tr.className = "changed";
+      if (m.status === "error") tr.className = "error";
+      const statusClass = m.status === "error" ? "status-err" : m.status === "changed" ? "status-changed" : "status-ok";
+      const statusLabel = m.status === "error" ? ("エラー: " + (m.error || "")) :
+                           m.status === "changed" ? "名前が変わりました" : "確認済み";
+      tr.innerHTML = `
+        <td>${m.id}</td>
+        <td class="name-cell">${m.name || "(未取得)"}
+          ${m.prevName ? `<span class="diff">前回: ${m.prevName}</span>` : ""}
+        </td>
+        <td>${m.kingdom || ""}</td>
+        <td>${m.memo || ""}</td>
+        <td>${m.lastChecked || ""}</td>
+        <td class="${statusClass}">${statusLabel}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    if (!(data.members || []).length) {
+      tbody.innerHTML = '<tr><td colspan="6">まだメンバーが登録されていません(members.jsonに追加してください)</td></tr>';
+    }
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:#e35d5d">読み込みに失敗しました: ${e.message}</td></tr>`;
+  }
+}
+load();
+</script>
+</body>
+</html>
