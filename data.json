@@ -1,0 +1,12 @@
+{
+  "lastRun": "2026-08-17 21:26:51 UTC",
+  "members": [
+    {
+      "id": "12345678",
+      "memo": "サンプル行(自由に書き換え・追加・削除してください)",
+      "status": "error",
+      "error": "HTTP Error 404: Not Found",
+      "lastChecked": "2026-08-17 21:26:50 UTC"
+    }
+  ]
+}
