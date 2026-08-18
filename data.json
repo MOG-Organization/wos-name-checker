@@ -1,19 +1,12 @@
 {
-  "lastRun": "2026-08-18 00:56:30 UTC",
+  "lastRun": "2026-08-18 01:14:49 UTC",
   "members": [
-    {
-      "id": "701512451",
-      "memo": "パトセルゲイ",
-      "status": "error",
-      "error": "HTTP Error 404: Not Found",
-      "lastChecked": "2026-08-18 00:56:27 UTC"
-    },
     {
       "id": "557599817",
       "memo": "",
       "status": "error",
-      "error": "HTTP Error 404: Not Found",
-      "lastChecked": "2026-08-18 00:56:29 UTC"
+      "error": "HTTP 404 Not Found / body: <!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"robots\" content=\"noindex,nofollow,noarchive\" />\n    <title>An Error Occurred: Not Found</title>\n    <style>body { background-color: #fff; color: #222; font: 16px/1.5 -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Hel",
+      "lastChecked": "2026-08-18 01:14:48 UTC"
     }
   ]
 }
