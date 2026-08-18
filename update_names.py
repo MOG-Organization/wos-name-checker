@@ -49,8 +49,12 @@ def fetch_player(fid: str):
                           "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         },
     )
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        text = resp.read().decode("utf-8")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            text = resp.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"HTTP {e.code} {e.reason} / body: {body[:300]}") from None
 
     payload = json.loads(text)
     data = payload.get("data") or {}
